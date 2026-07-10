@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poverty Profile: Household Characteristics Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --black:#0A0A0A; --black2:#141414; --black3:#1C1C1C; --black4:#242424;
+    --gold:#E8A838; --gold2:#F4C56A; --gold3:#C4871E;
+    --white:#FFFFFF; --slate:#8A8A8A; --text:#E8E8E8; --muted:#666666;
+    --border:#2E2E2E; --card:#161616; --r-pos:#4A9EE0; --r-neg:#E05A4A;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text);line-height:1.6;}
+  .hero{background:var(--black);padding:72px 48px 60px;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+  .hero::before{content:'';position:absolute;top:-100px;right:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(232,168,56,0.10) 0%,transparent 65%);pointer-events:none;}
+  .hero-eyebrow{font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+  .hero h1{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,58px);font-weight:900;color:var(--white);line-height:1.1;max-width:750px;margin-bottom:20px;}
+  .hero h1 span{color:var(--gold);}
+  .hero-sub{font-size:15px;color:var(--slate);max-width:560px;margin-bottom:52px;font-weight:300;}
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:28px;max-width:680px;}
+  .kpi{border-left:2px solid var(--gold);padding-left:16px;}
+  .kpi-num{font-family:'Playfair Display',serif;font-size:38px;font-weight:700;color:var(--gold);line-height:1;}
+  .kpi-label{font-size:12px;color:var(--slate);margin-top:5px;font-weight:400;}
+  .nav-wrap{background:var(--black2);padding:0 48px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
+  .nav-tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
+  .nav-tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{padding:16px 20px;font-size:13px;font-weight:500;color:var(--slate);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .2s,border-color .2s;font-family:'Inter',sans-serif;}
+  .tab-btn:hover{color:var(--gold2);}
+  .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .main{max-width:1200px;margin:0 auto;padding:48px 32px;}
+  .section{display:none;}
+  .section.active{display:block;}
+  .card{background:var(--card);border-radius:10px;padding:28px;border:1px solid var(--border);}
+  .card-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--gold2);margin-bottom:4px;}
+  .card-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+  .section-header{display:flex;align-items:flex-start;gap:20px;margin-bottom:28px;}
+  .section-icon{width:52px;height:52px;border-radius:10px;background:var(--black3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .section-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--white);}
+  .section-desc{font-size:14px;color:var(--muted);margin-top:4px;}
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+  @media(max-width:768px){.chart-grid{grid-template-columns:1fr;}}
+  .chart-wrap{position:relative;height:280px;}
+  .insight-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:24px;}
+  .insight-card{background:var(--black3);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
+  .insight-val{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--gold);line-height:1;}
+  .insight-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--slate);margin-top:5px;}
+  .insight-desc{font-size:12.5px;color:#AAAAAA;margin-top:8px;line-height:1.5;}
+  .finding-box{background:var(--black3);border:1px solid var(--gold3);border-left:4px solid var(--gold);border-radius:0 10px 10px 0;padding:18px 22px;margin-bottom:24px;}
+  .finding-box .finding-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:8px;}
+  .finding-box p{font-size:13.5px;color:#CCCCCC;line-height:1.65;}
+  .finding-box p+p{margin-top:8px;}
+  .coding-box{background:#0F1A0F;border:1px solid #2A4A2A;border-left:4px solid #5CC87A;border-radius:0 10px 10px 0;padding:18px 22px;margin-bottom:24px;}
+  .coding-box .coding-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#5CC87A;margin-bottom:12px;}
+  .coding-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .coding-table th{background:rgba(92,200,122,0.08);color:#5CC87A;padding:8px 12px;text-align:left;font-weight:600;font-size:11px;border-bottom:1px solid #2A4A2A;}
+  .coding-table td{padding:8px 12px;border-bottom:1px solid #1A2E1A;color:#CCCCCC;}
+  .coding-table tr:last-child td{border-bottom:none;}
+  .code-0{color:#4A9EE0;font-weight:700;}
+  .code-1{color:#E8A838;font-weight:700;}
+  .corr-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  .corr-table th{background:var(--black3);color:var(--gold2);padding:10px 14px;text-align:left;font-weight:600;font-size:11px;letter-spacing:.5px;border-bottom:1px solid var(--border);}
+  .corr-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);}
+  .corr-table tr:last-child td{border-bottom:none;}
+  .corr-table tr:hover td{background:var(--black3);}
+  .r-positive{color:var(--r-pos);font-weight:600;}
+  .r-negative{color:var(--r-neg);font-weight:600;}
+  .r-null{color:var(--muted);font-style:italic;}
+  .note-box{background:var(--black3);border-left:3px solid var(--muted);border-radius:0 8px 8px 0;padding:12px 16px;font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.6;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;margin-left:8px;vertical-align:middle;}
+  .pill-pos{background:rgba(74,158,224,.15);color:var(--r-pos);border:1px solid rgba(74,158,224,.3);}
+  .pill-neg{background:rgba(224,90,74,.15);color:var(--r-neg);border:1px solid rgba(224,90,74,.3);}
+  .pill-mix{background:rgba(232,168,56,.12);color:var(--gold2);border:1px solid rgba(232,168,56,.3);}
+  .divider{height:1px;background:var(--border);margin:28px 0;}
+  footer{background:var(--black2);color:var(--muted);text-align:center;padding:28px;font-size:12px;margin-top:60px;border-top:1px solid var(--border);}
+  footer strong{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-eyebrow">HIES 2022 · Poverty Analysis</p>
+  <h1>Understanding <span>Poverty</span> Through Household Characteristics and Socioeconomic Factors</h1>
+  <p class="hero-sub">A correlation analysis of seven household factors against upper and lower poverty line rates across National, Rural and Urban strata.</p>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-num">7</div><div class="kpi-label">Variables Analysed</div></div>
+    <div class="kpi"><div class="kpi-num">2</div><div class="kpi-label">Poverty Thresholds</div></div>
+    <div class="kpi"><div class="kpi-num">3</div><div class="kpi-label">Geographic Strata</div></div>
+  </div>
+</div>
+
+<div class="nav-wrap">
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
+    <button class="tab-btn" onclick="showTab('household',this)">Household Size</button>
+    <button class="tab-btn" onclick="showTab('age',this)">Age of Head</button>
+    <button class="tab-btn" onclick="showTab('land',this)">Land Ownership</button>
+    <button class="tab-btn" onclick="showTab('education',this)">Education</button>
+    <button class="tab-btn" onclick="showTab('gender',this)">Gender</button>
+    <button class="tab-btn" onclick="showTab('marital',this)">Marital Status</button>
+    <button class="tab-btn" onclick="showTab('religion',this)">Religion</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ══ OVERVIEW ══ -->
+  <div id="tab-overview" class="section active">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <div>
+        <div class="section-title">Overview: All Variables</div>
+        <div class="section-desc">Spearman ρ (continuous) · Point-Biserial r (binary) · Correlation coefficients for all seven characteristics</div>
+      </div>
+    </div>
+    <div class="finding-box">
+      <div class="finding-title">🔍 Key Takeaways</div>
+      <p><strong style="color:var(--gold2)">Education is the single most impactful factor with the most perfect monotonic relationship with poverty.</strong> Literate households have up to 72% lower deep poverty rates than illiterate ones: The largest gap observed across all variables.</p>
+      <p><strong style="color:var(--gold2)">Land ownership also shows a strong monotonic relationship with poverty</strong> (ρ = −1.00, National & Rural) every step up in land holding corresponds to a reduction in poverty rate. Only Urban data disrupts the perfect reduction.</p>
+      <p><strong style="color:var(--gold2)">Urban areas consistently weaken every correlation</strong> whether positive or negative, suggesting cities provide structural buffers that partially decouple household characteristics from poverty outcomes.</p>
+      <p><strong style="color:var(--gold2)">Spearman rank correlation</strong> was used for the three continuous variables (Household Size, Age of Head, Land Ownership, Education) given their ordinal, non-normally distributed and unequally spaced category structures. Point-biserial correlation was used for all binary variables.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Full Correlation Matrix</div>
+      <div class="card-sub">Spearman ρ (Household Size, Age, Land, Education) · Point-Biserial r (Gender, Marital, Religion) · Blue = positive · Red = negative</div>
+      <table class="corr-table">
+        <thead><tr><th>Variable</th><th>Method</th><th>UPL National</th><th>UPL Rural</th><th>UPL Urban</th><th>LPL National</th><th>LPL Rural</th><th>LPL Urban</th></tr></thead>
+        <tbody id="corrTableBody"></tbody>
+      </table>
+      <div class="note-box">⚠ Binary variables (Gender, Marital Status, Religion) have only 2 data points per group so r = ±1.0 or NaN by mathematical necessity, not a meaningful strength measure. Spearman ρ for continuous variables is robust to non-normality and unequal interval spacing.</div>
+    </div>
+  </div>
+
+  <!-- ══ HOUSEHOLD SIZE ══ -->
+  <div id="tab-household" class="section">
+    <div class="section-header">
+      <div class="section-icon">🏠</div>
+      <div>
+        <div class="section-title">Household Size <span class="pill pill-pos">Positive ρ</span></div>
+        <div class="section-desc">Larger households are consistently associated with higher poverty rates across all strata</div>
+      </div>
+    </div>
+    <div class="finding-box">
+      <div class="finding-title">🔍 Interesting Insights</div>
+      <p><strong style="color:var(--gold2)">Rural households bear the sharpest burden of size.</strong> A rural household of 11+ members has a 32.9% UPL poverty rate: nearly 4× that of a 1–2 person household (8.7%). Spearman ρ = 0.94 in rural areas confirms a near-perfect rank-order relationship.</p>
+      <p><strong style="color:var(--gold2)">Urban poverty plateaus and even dips for very large households.</strong> The UPL rate for 11+ urban households (15.7%) is actually lower than 9–10 member households (28.1%), which is why Urban Spearman ρ (0.66) is weaker, the rank order breaks at the top end, likely because very large urban households pool resources.</p>
+      <p><strong style="color:var(--gold2)">LPL correlations are stronger than UPL for National and Rural</strong> (ρ = 0.83 vs 0.77 National), suggesting household size is an even better predictor of deep poverty than moderate poverty in those strata.</p>
+    </div>
+    <div class="insight-row">
+      <div class="insight-card"><div class="insight-val">0.94</div><div class="insight-label">Strongest ρ</div><div class="insight-desc">Rural UPL Spearman: near-perfect rank correlation</div></div>
+      <div class="insight-card"><div class="insight-val">0.66</div><div class="insight-label">Weakest ρ</div><div class="insight-desc">Urban UPL & LPL: rank order breaks for very large urban households</div></div>
+      <div class="insight-card"><div class="insight-val">All +ve</div><div class="insight-label">Direction</div><div class="insight-desc">Every group shows a positive rank correlation: more members, more poverty</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="card"><div class="card-title">UPL — Poverty Rate by Household Size</div><div class="card-sub">Upper Poverty Line · National, Rural, Urban</div><div class="chart-wrap"><canvas id="hhUPL"></canvas></div></div>
+      <div class="card"><div class="card-title">LPL — Poverty Rate by Household Size</div><div class="card-sub">Lower Poverty Line · National, Rural, Urban</div><div class="chart-wrap"><canvas id="hhLPL"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-title">Spearman ρ Comparison — UPL vs LPL</div><div class="card-sub">Rank correlation values by location and poverty type</div><div class="chart-wrap" style="height:220px"><canvas id="hhBar"></canvas></div></div>
+  </div>
+
+  <!-- ══ AGE ══ -->
+  <div id="tab-age" class="section">
+    <div class="section-header">
+      <div class="section-icon">👤</div>
+      <div>
+        <div class="section-title">Age of Household Head <span class="pill pill-neg">Negative ρ</span></div>
+        <div class="section-desc">Older household heads tend to have lower poverty rates across most strata</div>
+      </div>
+    </div>
+    <div class="finding-box">
+      <div class="finding-title">🔍 Interesting Insights</div>
+      <p><strong style="color:var(--gold2)">Age is protective but the relationship is not strictly monotonic.</strong> The 30–39 age group actually has higher poverty rates than the ≤29 group in several strata, which is why Spearman ρ (−0.80) is strong but not perfect.</p>
+      <p><strong style="color:var(--gold2)">Rural deep poverty (LPL Rural, ρ = −0.87) shows the strongest age effect.</strong> Older rural heads have accumulated land, established farming networks, and reduced debt burdens over decades compounding the protective effect of age in a way urban settings cannot replicate.</p>
+      <p><strong style="color:var(--gold2)">Urban LPL (ρ = −0.10) is essentially zero.</strong> In cities, structural factors like occupation, education, and neighbourhood determine deep poverty far more than the age of the household head.</p>
+    </div>
+    <div class="insight-row">
+      <div class="insight-card"><div class="insight-val">−0.87</div><div class="insight-label">Strongest ρ</div><div class="insight-desc">Rural LPL: Age most protective in rural deep poverty</div></div>
+      <div class="insight-card"><div class="insight-val">−0.10</div><div class="insight-label">Weakest ρ</div><div class="insight-desc">Urban LPL: Age almost irrelevant for urban deep poverty</div></div>
+      <div class="insight-card"><div class="insight-val">30–39</div><div class="insight-label">Vulnerability peak</div><div class="insight-desc">Highest poverty age group: Life stage expenditures outpace income</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="card"><div class="card-title">UPL — Poverty Rate by Age of Head</div><div class="card-sub">Upper Poverty Line · National, Rural, Urban</div><div class="chart-wrap"><canvas id="ageUPL"></canvas></div></div>
+      <div class="card"><div class="card-title">LPL — Poverty Rate by Age of Head</div><div class="card-sub">Lower Poverty Line · National, Rural, Urban</div><div class="chart-wrap"><canvas id="ageLPL"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-title">Spearman ρ Comparison — UPL vs LPL</div><div class="card-sub">Rank correlation values by location and poverty type</div><div class="chart-wrap" style="height:220px"><canvas id="ageBar"></canvas></div></div>
+  </div>
+
+  <!-- ══ LAND ══ -->
+  <div id="tab-land" class="section">
+    <div class="section-header">
+      <div class="section-icon">🌾</div>
+      <div>
+        <div class="section-title">Land Ownership <span class="pill pill-neg">Negative ρ</span></div>
+        <div class="section-desc">More land consistently reduces poverty: The second most monotonic relationship in the dataset</div>
+      </div>
+    </div>
+    <div class="finding-box">
+      <div class="finding-title">🔍 Interesting Insights</div>
+      <p><strong style="color:var(--gold2)">Perfect Spearman ρ = −1.00 for National and Rural.</strong> Every single increase in land holding category corresponds to a reduction in poverty rate without a single exception. The most definitive finding in the entire analysis.</p>
+      <p><strong style="color:var(--gold2)">Landlessness is the single greatest rural poverty risk.</strong> Rural landless households face a 35.6% UPL and 16.6% LPL rate: the highest in the dataset. Even owning under 0.05 acres drops the UPL rate by 6.8 percentage points.</p>
+      <p><strong style="color:var(--gold2)">Urban breaks the perfect pattern (ρ = −0.82 UPL, −0.74 LPL)</strong> because households with 7.5+ acres show a slight uptick in poverty.</p>
+    </div>
+    <div class="insight-row">
+      <div class="insight-card"><div class="insight-val">−1.00</div><div class="insight-label">National & Rural ρ</div><div class="insight-desc">Perfect monotonic relationship, every land rank increase reduces poverty</div></div>
+      <div class="insight-card"><div class="insight-val">35.6%</div><div class="insight-label">Landless Rural UPL</div><div class="insight-desc">Highest poverty rate in the entire dataset: landlessness is acutely dangerous</div></div>
+      <div class="insight-card"><div class="insight-val">3.7%</div><div class="insight-label">7.5+ acres Rural UPL</div><div class="insight-desc">From 35.6% to 3.7%: land compresses poverty by ~90%</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="card"><div class="card-title">UPL — Poverty Rate by Land Size</div><div class="card-sub">Upper Poverty Line · National, Rural, Urban</div><div class="chart-wrap"><canvas id="landUPL"></canvas></div></div>
+      <div class="card"><div class="card-title">LPL — Poverty Rate by Land Size</div><div class="card-sub">Lower Poverty Line · National, Rural, Urban</div><div class="chart-wrap"><canvas id="landLPL"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-title">Spearman ρ Comparison — UPL vs LPL</div><div class="card-sub">Rank correlation values by location and poverty type</div><div class="chart-wrap" style="height:220px"><canvas id="landBar"></canvas></div></div>
+  </div>
+
+  <!-- ══ EDUCATION ══ -->
+  <div id="tab-education" class="section">
+    <div class="section-header">
+      <div class="section-icon">📚</div>
+      <div>
+        <div class="section-title">Education Status <span class="pill pill-neg">Literacy Reduces Poverty in all cases.</span></div>
+        <div class="section-desc">Literacy is associated with dramatically lower poverty rates: the most impactful variable</div>
+      </div>
+    </div>
+  
+    <!-- INSIGHTS -->
+    <div class="finding-box">
+      <div class="finding-title">🔍 Interesting Insights</div>
+      <p><strong style="color:var(--gold2)">Education has the largest absolute poverty gap of all variables.</strong> Illiterate households face a 26.9% UPL rate, nearly double the 14.2% for literate households.</p>
+      <p><strong style="color:var(--gold2)">The literacy dividend is biggest in cities.</strong> Urban literate households have a 71.8% lower LPL rate than urban illiterates (8.5% → 2.4%).</p>
+      <p><strong style="color:var(--gold2)">The most perfectly negative monotonic relationship with poverty.</strong></p>
+      <p><strong style="color:var(--gold2)">Illiteracy poverty rates are remarkably uniform across locations</strong> (~26.6–27.0% UPL) whether rural or urban, illiterate households face similar poverty odds. Literacy is a base condition whose absence cannot be compensated by location alone.</p>
+    </div>
+    <!--  INSIGHT CARDS -->
+    <div class="insight-row">
+      <div class="insight-card"><div class="insight-val">−47%</div><div class="insight-label">UPL National reduction</div><div class="insight-desc">Literate households have 47% lower national UPL poverty rate</div></div>
+      <div class="insight-card"><div class="insight-val">−72%</div><div class="insight-label">LPL Urban reduction</div><div class="insight-desc">Largest effect: literacy cuts urban deep poverty by 71.8%</div></div>
+      <div class="insight-card"><div class="insight-val">−15.5pp</div><div class="insight-label">UPL Urban gap</div><div class="insight-desc">Illiterate 26.6% vs literate 11.1% : largest absolute gap</div></div>
+    </div>
+    <!-- CHARTS UPDATED-->
+    <div class="chart-grid">
+      <div class="card"><div class="card-title">UPL: Poverty Rate by Education Level</div><div class="card-sub">Upper Poverty Line · No education to SSC and above</div><div class="chart-wrap"><canvas id="eduUPL"></canvas></div></div>
+      <div class="card"><div class="card-title">LPL: Poverty Rate by Education Level</div><div class="card-sub">Lower Poverty Line · No education to SSC and above</div><div class="chart-wrap"><canvas id="eduLPL"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-title">Spearman ρ Comparison: UPL vs LPL</div><div class="card-sub">Rank correlation values by location and poverty type</div><div class="chart-wrap" style="height:220px"><canvas id="eduBar"></canvas></div></div>
+    <div class="note-box">ⓘ Spearman ρ = −1.00 for all six groups confirming a perfect monotonic relationship. Every step up in educational attainment corresponds to a lower poverty rate without a single exception.</div>
+  </div>
+
+  <!-- ══ GENDER ══ -->
+  <div id="tab-gender" class="section">
+    <div class="section-header">
+      <div class="section-icon">⚥</div>
+      <div>
+        <div class="section-title">Gender of Household Head <span class="pill pill-mix">Binary</span></div>
+        <div class="section-desc">Male-headed households have higher UPL poverty rates; LPL shows almost no gap</div>
+      </div>
+    </div>
+    <div class="coding-box">
+      <div class="coding-title">⌨ Binary Encoding</div>
+      <table class="coding-table">
+        <thead><tr><th>Category</th><th>Encoded Value</th><th>Rationale</th></tr></thead>
+        <tbody>
+          <tr><td>Female</td><td><span class="code-0">0</span></td><td>Reference category: Generally lower poverty rate in UPL</td></tr>
+          <tr><td>Male</td><td><span class="code-1">1</span></td><td>Higher poverty rate group: Positive r indicates males associated with higher poverty</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;">Note: The sign of point-biserial r depends on encoding. Swapping 0/1 would flip the sign but not change the interpretation.</p>
+    </div>
+    <div class="finding-box">
+      <div class="finding-title">🔍 Interesting Insights</div>
+      <p><strong style="color:var(--gold2)">The gender poverty gap is real but limited to the upper poverty band.</strong> Male-headed households are 5.7pp more likely to be near-poor (UPL) in rural areas, yet LPL rates are identical for both genders nationally and rurally. The gender gap disappears at severe deprivation.</p>
+      <p><strong style="color:var(--gold2)">This likely reflects household composition, not gender per se.</strong></p>
+      <p><strong style="color:var(--gold2)">Urban shows the smallest gap (3.7pp UPL)</strong></p>
+    </div>
+    <div class="insight-row">
+      <div class="insight-card"><div class="insight-val">+5.7pp</div><div class="insight-label">Rural UPL gap</div><div class="insight-desc">Male-headed rural households are 5.7pp more likely to be in upper poverty</div></div>
+      <div class="insight-card"><div class="insight-val">0.0pp</div><div class="insight-label">LPL National & Rural</div><div class="insight-desc">Identical rates : gender makes no difference in deep poverty</div></div>
+      <div class="insight-card"><div class="insight-val">+3.7pp</div><div class="insight-label">Urban UPL gap</div><div class="insight-desc">Smallest gap: urban environments narrow gender disparity</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="card"><div class="card-title">UPL — Poverty Rate by Gender</div><div class="card-sub">Upper Poverty Line · Female vs Male headed</div><div class="chart-wrap"><canvas id="genderUPL"></canvas></div></div>
+      <div class="card"><div class="card-title">LPL — Poverty Rate by Gender</div><div class="card-sub">Lower Poverty Line · Female vs Male headed</div><div class="chart-wrap"><canvas id="genderLPL"></canvas></div></div>
+    </div>
+    <div class="note-box">ⓘ Point-biserial r = ±1.0 or NaN (where rates are identical).</div>
+  </div>
+
+  <!-- ══ MARITAL STATUS ══ -->
+  <div id="tab-marital" class="section">
+    <div class="section-header">
+      <div class="section-icon">💍</div>
+      <div>
+        <div class="section-title">Marital Status <span class="pill pill-pos">Married = Higher Poverty</span></div>
+        <div class="section-desc">Married-headed households consistently show higher poverty rates across all groups</div>
+      </div>
+    </div>
+    <div class="coding-box">
+      <div class="coding-title">⌨ Binary Encoding</div>
+      <table class="coding-table">
+        <thead><tr><th>Category</th><th>Encoded Value</th><th>Rationale</th></tr></thead>
+        <tbody>
+          <tr><td>Unmarried</td><td><span class="code-0">0</span></td><td>Reference category: lower poverty rate across all groups</td></tr>
+          <tr><td>Married</td><td><span class="code-1">1</span></td><td>Higher poverty rate group: positive r indicates married heads associated with higher poverty</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;">Note: The "Widowed/Divorced" category (19.1% UPL nationally) was excluded from the binary analysis as it falls between the two groups. Its inclusion would require a multi-category approach beyond point-biserial correlation.</p>
+    </div>
+    <div class="finding-box">
+      <div class="finding-title">🔍 Interesting Insights</div>
+      <p><strong style="color:var(--gold2)">Unlike gender, the marital gap persists even in deep poverty (LPL).</strong> Married households are 2.1pp more likely to be below the LPL nationally.</p>
+      <p><strong style="color:var(--gold2)">Rural married households face the steepest disadvantage</strong> a 5.6pp UPL gap.</p>
+    </div>
+    <div class="insight-row">
+      <div class="insight-card"><div class="insight-val">+5.6pp</div><div class="insight-label">Rural UPL gap</div><div class="insight-desc">Married rural households are 5.6pp more likely to be in upper poverty</div></div>
+      <div class="insight-card"><div class="insight-val">+1.8pp</div><div class="insight-label">Urban LPL gap</div><div class="insight-desc">Even in urban deep poverty, married households are worse off</div></div>
+      <div class="insight-card"><div class="insight-val">All +ve</div><div class="insight-label">Consistent direction</div><div class="insight-desc">Unlike gender, the marital gap persists even at LPL level</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="card"><div class="card-title">UPL — Poverty Rate by Marital Status</div><div class="card-sub">Upper Poverty Line · Unmarried vs Married</div><div class="chart-wrap"><canvas id="maritalUPL"></canvas></div></div>
+      <div class="card"><div class="card-title">LPL — Poverty Rate by Marital Status</div><div class="card-sub">Lower Poverty Line · Unmarried vs Married</div><div class="chart-wrap"><canvas id="maritalLPL"></canvas></div></div>
+    </div>
+    <div class="note-box">ⓘ Point-biserial r = +1.0 for all groups. The pp gap is the meaningful metric here.</div>
+  </div>
+
+  <!-- ══ RELIGION ══ -->
+  <div id="tab-religion" class="section">
+    <div class="section-header">
+      <div class="section-icon">🕌</div>
+      <div>
+        <div class="section-title">Religion <span class="pill pill-mix">Mixed / Weak</span></div>
+        <div class="section-desc">National and Rural differences are negligible; the Urban gap is the only notable finding</div>
+      </div>
+    </div>
+    <div class="coding-box">
+      <div class="coding-title">⌨ Binary Encoding</div>
+      <table class="coding-table">
+        <thead><tr><th>Category</th><th>Encoded Value</th><th>Rationale</th></tr></thead>
+        <tbody>
+          <tr><td>Muslim</td><td><span class="code-0">0</span></td><td>Reference category: majority group in Bangladesh</td></tr>
+          <tr><td>Non-Muslim</td><td><span class="code-1">1</span></td><td>Minority group</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;">Note: The negative r for National and Urban UPL means Non-Muslim households have lower poverty rates in those strata. The positive r for Rural UPL means the opposite. Non-Muslim rural households have a slightly higher rate (+1.0pp).</p>
+    </div>
+    <div class="finding-box">
+      <div class="finding-title">🔍 Interesting Insights</div>
+      <p><strong style="color:var(--gold2)">Religion has the weakest overall association with poverty of all seven variables.</strong> National and Rural differences are under 1pp.</p>
+      <p><strong style="color:var(--gold2)">The Urban UPL gap (−6.5pp) is the one exception worth noting.</strong> Non-Muslim urban households have substantially lower upper poverty rates.</p>
+      <p><strong style="color:var(--gold2)">Rural is the only reversal.</strong> Non-Muslim rural UPL rate is only 1.0pp higher.</p>
+    </div>
+    <div class="insight-row">
+      <div class="insight-card"><div class="insight-val">−6.5pp</div><div class="insight-label">Urban UPL gap</div><div class="insight-desc">Non-Muslim urban households: 6.5pp lower UPL: only notable gap</div></div>
+      <div class="insight-card"><div class="insight-val">−0.7pp</div><div class="insight-label">National UPL gap</div><div class="insight-desc">Nationally negligible: less than 1pp difference</div></div>
+      <div class="insight-card"><div class="insight-val">+1.0pp</div><div class="insight-label">Rural UPL reversal</div><div class="insight-desc">Only group where Non-Muslim rate is slightly higher</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="card"><div class="card-title">UPL — Poverty Rate by Religion</div><div class="card-sub">Upper Poverty Line · Muslim vs Non-Muslim</div><div class="chart-wrap"><canvas id="relUPL"></canvas></div></div>
+      <div class="card"><div class="card-title">LPL — Poverty Rate by Religion</div><div class="card-sub">Lower Poverty Line · Muslim vs Non-Muslim</div><div class="chart-wrap"><canvas id="relLPL"></canvas></div></div>
+    </div>
+    <div class="note-box">⚠ National and Rural differences (< 1pp) are too small to be meaningful. The Urban gap is the only notable finding for this variable.</div>
+  </div>
+
+</div>
+
+<footer>
+  Based on HIES 2022 (Chapter 6) by Bangladesh Bureau of Statistics (BBS) · Spearman ρ (Household Size, Age, Land) · Point-Biserial r (Gender, Marital, Education, Religion) · UPL = Upper Poverty Line · LPL = Lower Poverty Line
+  <br><span style="color:var(--gold);margin-top:8px;display:inline-block;">Designed and developed by N. Chowdhury</span>
+</footer>
+
+<script>
+const C = { national:'#E8A838', rural:'#4A9EE0', urban:'#5CC87A', cat0:'#4A9EE0', cat1:'#E8A838' };
+const alpha = (hex, a) => hex + Math.round(a*255).toString(16).padStart(2,'0');
+
+const corrAll = {
+  household: { UPL:{National:0.7714,Rural:0.9429,Urban:0.6571}, LPL:{National:0.8286,Rural:0.8286,Urban:0.6571} },
+  age:       { UPL:{National:-0.8000,Rural:-0.8000,Urban:-0.5000}, LPL:{National:-0.8000,Rural:-0.8721,Urban:-0.1000} },
+  land:      { UPL:{National:-1.0000,Rural:-1.0000,Urban:-0.8214}, LPL:{National:-1.0000,Rural:-1.0000,Urban:-0.7388} },
+  gender:    { UPL:{National:1.0,Rural:1.0,Urban:1.0}, LPL:{National:null,Rural:null,Urban:1.0} },
+  marital:   { UPL:{National:1.0,Rural:1.0,Urban:1.0}, LPL:{National:1.0,Rural:1.0,Urban:1.0} },
+  education: { UPL:{National:-1.0000,Rural:-1.0000,Urban:-1.0000}, LPL:{National:-1.0000,Rural:-1.0000,Urban:-1.0000} },
+  religion:  { UPL:{National:-1.0,Rural:1.0,Urban:-1.0}, LPL:{National:-1.0,Rural:-1.0,Urban:-1.0} },
+};
+
+const hhLabels   = ['1–2','3–4','5–6','7–8','9–10','11+'];
+const ageLabels  = ['≤29','30–39','40–49','50–59','60+'];
+const landLabels = ['0','<0.05','0.05–0.49','0.50–1.49','1.50–2.49','2.50–7.49','7.50+'];
+const eduLabels  = ['No education','Class I–IV','Class V–IX','SSC+'];
+
+const raw = {
+  household: {
+    UPL:{ National:[6.8,13.3,21.8,29.2,29.1,27.5], Rural:[8.7,14.4,24.0,29.8,29.4,32.9], Urban:[2.6,11.1,16.8,27.3,28.1,15.7] },
+    LPL:{ National:[1.8,3.2,7.0,9.7,12.5,7.5],     Rural:[2.3,3.9,7.7,10.4,14.0,9.3],   Urban:[0.7,1.8,5.4,7.7,7.8,3.6] }
+  },
+  age: {
+    UPL:{ National:[20.3,20.5,19.7,16.0,17.5], Rural:[22.7,22.3,22.4,16.3,19.3], Urban:[14.8,16.5,14.2,15.2,12.7] },
+    LPL:{ National:[5.8,7.0,5.1,5.6,4.8],      Rural:[7.2,8.2,6.0,5.7,5.7],      Urban:[2.7,4.5,3.4,5.2,2.5] }
+  },
+  land: {
+    UPL:{ National:[25.8,25.1,19.2,12.5,8.1,7.2,3.9], Rural:[35.6,28.8,21.1,14.1,9.7,8.3,3.7], Urban:[19.1,19.5,14.2,6.3,1.8,2.6,4.3] },
+    LPL:{ National:[9.5,7.4,5.9,3.3,1.8,0.8,0.7],     Rural:[16.6,8.9,6.8,3.7,2.1,0.8,0.0],    Urban:[4.6,5.2,3.6,1.8,0.9,0.9,2.3] }
+  },
+  // UPDATED: education now uses 4-level ordinal data
+  education:{
+    UPL:{ National:[26.6,24.1,17.7,6.7], Rural:[26.8,24.1,18.0,9.4], Urban:[25.8,24.2,17.2,4.1] },
+    LPL:{ National:[9.3,5.9,5.2,1.2],    Rural:[9.5,6.0,5.7,1.9],    Urban:[8.3,5.7,4.1,0.5] }
+  },
+  gender:   { UPL:{National:[14.1,19.1],Rural:[15.3,21.0],Urban:[11.4,15.1]}, LPL:{National:[5.6,5.6],Rural:[6.5,6.5],Urban:[3.6,3.8]} },
+  marital:  { UPL:{National:[13.9,18.7],Rural:[14.9,20.5],Urban:[11.3,14.7]}, LPL:{National:[3.5,5.6],Rural:[4.2,6.4],Urban:[1.9,3.7]} },
+  religion: { UPL:{National:[18.7,18.0],Rural:[20.4,21.4],Urban:[15.2,8.7]}, LPL:{National:[5.7,5.3],Rural:[6.5,6.4],Urban:[3.9,2.2]} },
+};
+
+const insideBarLabels = {
+  id:'insideBarLabels',
+  afterDatasetsDraw(chart) {
+    const {ctx} = chart;
+    chart.data.datasets.forEach((dataset,i) => {
+      const meta = chart.getDatasetMeta(i);
+      if (meta.type !== 'bar') return;
+      meta.data.forEach((bar,j) => {
+        const val = dataset.data[j];
+        if (val===null||val===undefined) return;
+        const isCorr = chart.config.options._isCorrChart===true;
+        const label = isCorr ? val.toFixed(2) : val.toFixed(1)+'%';
+        const barHeight = Math.abs(bar.base - bar.y);
+        if (barHeight < 14) return;
+        const y = val>=0 ? bar.y+barHeight/2+5 : bar.y-barHeight/2+5;
+        ctx.save();
+        ctx.fillStyle='#FFFFFF'; ctx.font='bold 11px Inter,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=3;
+        ctx.fillText(label, bar.x, y);
+        ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(insideBarLabels);
+Chart.defaults.color='#888888';
+Chart.defaults.borderColor='#2E2E2E';
+
+const lineOpts = () => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:'#AAAAAA'}}},
+  scales:{
+    x:{grid:{display:false},ticks:{font:{size:10},color:'#888'}},
+    y:{title:{display:true,text:'Poverty rate (%)',font:{size:10},color:'#888'},
+       ticks:{callback:v=>v+'%',font:{size:10},color:'#888'},
+       grid:{color:'rgba(255,255,255,0.05)'}}
+  }
+});
+
+function lineChart(id, labels, datasets) {
+  const ctx = document.getElementById(id); if(!ctx) return;
+  new Chart(ctx,{type:'line',data:{labels,datasets:datasets.map(d=>({...d,tension:0.3,pointRadius:5,pointHoverRadius:7}))},options:lineOpts()});
+}
+
+function corrBarChart(id, corrObj, yLabel='Spearman ρ') {
+  const ctx = document.getElementById(id); if(!ctx) return;
+  const locs = ['National','Rural','Urban'];
+  new Chart(ctx,{
+    type:'bar',
+    data:{labels:locs,datasets:[
+      {label:'UPL',data:locs.map(l=>corrObj.UPL[l]||0),backgroundColor:'#E8A838',borderRadius:4,borderSkipped:false},
+      {label:'LPL',data:locs.map(l=>corrObj.LPL[l]||0),backgroundColor:'#4A9EE0',borderRadius:4,borderSkipped:false},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,_isCorrChart:true,
+      plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:'#AAAAAA'}},insideBarLabels:{}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#888'}},
+        y:{min:-1.1,max:1.1,title:{display:true,text:yLabel,font:{size:10},color:'#888'},
+           grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>v.toFixed(1),font:{size:10},color:'#888'}}
+      }
+    }
+  });
+}
+
+function binaryBarChart(id, key, pt, l0, l1) {
+  const ctx = document.getElementById(id); if(!ctx) return;
+  const locs = ['National','Rural','Urban'];
+  new Chart(ctx,{
+    type:'bar',
+    data:{labels:locs,datasets:[
+      {label:l0,data:locs.map(l=>raw[key][pt][l][0]),backgroundColor:'#4A9EE0',borderRadius:4,borderSkipped:false},
+      {label:l1,data:locs.map(l=>raw[key][pt][l][1]),backgroundColor:'#E8A838',borderRadius:4,borderSkipped:false},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:'#AAAAAA'}},insideBarLabels:{}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:11},color:'#888'}},
+        y:{title:{display:true,text:'Poverty rate (%)',font:{size:10},color:'#888'},
+           ticks:{callback:v=>v+'%',font:{size:10},color:'#888'},
+           grid:{color:'rgba(255,255,255,0.05)'}}
+      }
+    }
+  });
+}
+
+function rCell(v) {
+  if(v===null||v===undefined) return `<span class="r-null">NaN</span>`;
+  const cls = v>0?'r-positive':'r-negative';
+  return `<span class="${cls}">${v.toFixed(4)}</span>`;
+}
+
+const varMeta = [
+  {key:'household',label:'Household Size', type:'Spearman ρ'},
+  {key:'age',      label:'Age of Head',    type:'Spearman ρ'},
+  {key:'land',     label:'Land Ownership', type:'Spearman ρ'},
+  {key:'education',label:'Education',      type:'Spearman ρ'},
+  {key:'gender',   label:'Gender of Head', type:'Point-Biserial r(F=0, M=1)'},
+  {key:'marital',  label:'Marital Status', type:'Point-Biserial r(UM=0, MR=1)'},
+  {key:'religion', label:'Religion',       type:'Point-Biserial r(MS=0, NMS=1)'},
+];
+
+const tbody = document.getElementById('corrTableBody');
+varMeta.forEach(v => {
+  const c = corrAll[v.key];
+  tbody.innerHTML += `<tr>
+    <td><strong style="color:var(--gold2)">${v.label}</strong></td>
+    <td><em style="color:var(--muted);font-size:11px">${v.type}</em></td>
+    <td>${rCell(c.UPL.National)}</td><td>${rCell(c.UPL.Rural)}</td><td>${rCell(c.UPL.Urban)}</td>
+    <td>${rCell(c.LPL.National)}</td><td>${rCell(c.LPL.Rural)}</td><td>${rCell(c.LPL.Urban)}</td>
+  </tr>`;
+});
+
+function buildCharts() {
+  const ds = (key, pt) => [
+    {label:'National',data:raw[key][pt].National,borderColor:C.national,backgroundColor:alpha(C.national,0.10),fill:true},
+    {label:'Rural',   data:raw[key][pt].Rural,   borderColor:C.rural,   backgroundColor:alpha(C.rural,0.10),   fill:true},
+    {label:'Urban',   data:raw[key][pt].Urban,   borderColor:C.urban,   backgroundColor:alpha(C.urban,0.10),   fill:true},
+  ];
+  lineChart('hhUPL',  hhLabels,   ds('household','UPL'));
+  lineChart('hhLPL',  hhLabels,   ds('household','LPL'));
+  corrBarChart('hhBar',  corrAll.household);
+  lineChart('ageUPL', ageLabels,  ds('age','UPL'));
+  lineChart('ageLPL', ageLabels,  ds('age','LPL'));
+  corrBarChart('ageBar', corrAll.age);
+  lineChart('landUPL',landLabels, ds('land','UPL'));
+  lineChart('landLPL',landLabels, ds('land','LPL'));
+  corrBarChart('landBar',corrAll.land);
+  // UPDATED: education uses line charts across 4 levels + Spearman bar
+  lineChart('eduUPL', eduLabels, ds('education','UPL'));
+  lineChart('eduLPL', eduLabels, ds('education','LPL'));
+  corrBarChart('eduBar', corrAll.education);
+  binaryBarChart('genderUPL',  'gender',   'UPL','Female','Male');
+  binaryBarChart('genderLPL',  'gender',   'LPL','Female','Male');
+  binaryBarChart('maritalUPL', 'marital',  'UPL','Unmarried','Married');
+  binaryBarChart('maritalLPL', 'marital',  'LPL','Unmarried','Married');
+  binaryBarChart('relUPL',     'religion', 'UPL','Muslim','Non-Muslim');
+  binaryBarChart('relLPL',     'religion', 'LPL','Muslim','Non-Muslim');
+}
+
+let chartsBuilt = false;
+function showTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(!chartsBuilt){buildCharts();chartsBuilt=true;}
+}
+window.addEventListener('load',()=>{buildCharts();chartsBuilt=true;});
+</script>
+</body>
+</html>
